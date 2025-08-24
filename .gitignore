@@ -1,3 +1,22 @@
 # Exclude pocketbase binary and source files
 pocketbase
 pocketbase-source
+
+# Sensitive location data - NEVER commit
+Items.data
+pb_data/
+pb_logs.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+backups/
+
+# Log files with potential sensitive data
+*.log
+logs/
+
+# Documentation site (not needed for main project)
+pocketbase-docs/

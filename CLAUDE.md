@@ -464,8 +464,18 @@ Closes #[issue-number]
 
 *(This section should be continuously updated with project-specific findings)*
 
+### PocketBase JSVM Quirks (2025-08-24)
+-   **Function Scoping**: Functions defined at top level in .pb.js files are NOT accessible in hook handlers - define functions INSIDE the hook handler
+-   **VM Isolation**: PocketBase uses separate VMs - "loader" VM for .pb.js files, "executor" VMs for hook execution  
+-   **No Timer Functions**: setTimeout, setInterval not available in JSVM - execute code directly
+-   **Hook Availability**: onBootstrap is global, but onServe must be accessed via $app.onServe()
+-   **API Signatures**: findFirstRecordByFilter doesn't support sorting - use findRecordsByFilter with limit 1
+-   **Error Handling**: findFirstRecordByFilter throws "sql: no rows" when no record found - this is expected, wrap in try-catch
+
 ### Common Mistakes to Avoid
 -   **Skipping AI Diary and Honest Feedback in retrospectives** - These sections provide crucial context and self-reflection that technical documentation alone cannot capture
+-   **Assuming standard Node.js environment in PocketBase JSVM** - It's Goja (Go's JS engine) with limitations
+-   **Defining functions at top level expecting them to be accessible in hooks** - They won't be due to VM isolation
 -   *Example: Forgetting to update a lockfile after changing dependencies.*
 -   *Example: Not checking build logs for warnings that could become errors.*
 -   *Example: Making assumptions about API responses instead of checking the spec.*
