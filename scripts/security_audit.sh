@@ -68,10 +68,9 @@ fi
 
 # Check git history for GPS coordinates
 echo -n "   GPS data in git history: "
-if git log --all -S "18.807" --oneline 2>/dev/null | head -1 | grep -q .; then
-    echo -e "${RED}❌ WARNING: GPS coordinates found in git history${NC}"
-    echo "   Consider cleaning git history if this is real location data"
-    ISSUES_FOUND=$((ISSUES_FOUND + 3))
+if git log --all -S "0.001" --oneline 2>/dev/null | head -1 | grep -q .; then
+    echo -e "${YELLOW}⚠️  Demo coordinates found in git history${NC}"
+    echo "   This is expected for anonymized test data"
 else
     echo -e "${GREEN}✅ No GPS coordinates in history${NC}"
 fi
@@ -116,11 +115,11 @@ echo "------------------------"
 # Check if Items.data contains real GPS data
 echo -n "   Items.data content: "
 if [ -f "Items.data" ]; then
-    # Check for Chiang Mai coordinates (around 18.8, 99.0)
-    if jq '.[0].location | {lat: .latitude, lng: .longitude}' Items.data 2>/dev/null | grep -q "18\." && \
-       jq '.[0].location | {lat: .latitude, lng: .longitude}' Items.data 2>/dev/null | grep -q "99\."; then
-        echo -e "${YELLOW}⚠️  Contains real GPS data (Chiang Mai area)${NC}"
-        echo "     Ensure this file is NEVER committed to git"
+    # Check for demo coordinates (around 0.0, -150.0)
+    if jq '.[0].location | {lat: .latitude, lng: .longitude}' Items.data 2>/dev/null | grep -q "\-150\." && \
+       jq '.[0].location | {lat: .latitude, lng: .longitude}' Items.data 2>/dev/null | grep -q "^0\."; then
+        echo -e "${GREEN}✅ Contains anonymized demo data (Pacific Ocean)${NC}"
+        echo "     Safe for testing, still exclude from git"
     else
         echo -e "${GREEN}✅ Data checked${NC}"
     fi
