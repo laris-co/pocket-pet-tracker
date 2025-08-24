@@ -1,0 +1,3 @@
+# Exclude pocketbase binary and source files
+pocketbase
+pocketbase-source
