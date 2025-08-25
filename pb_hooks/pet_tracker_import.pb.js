@@ -9,6 +9,8 @@ onBootstrap((e) => {
   
   // Define import function INSIDE the hook to ensure proper scope
   function importPetLocations() {
+    const startTime = Date.now()
+    
     try {
       // Read Items.data file
       const rawData = $os.readFile("Items.data")
@@ -25,16 +27,27 @@ onBootstrap((e) => {
       }
       
       const items = JSON.parse(dataStr)
+      const totalItems = items.filter(item => item.name && item.name.match(/^Tag \d+$/)).length
+      
+      console.log(`[Pet Tracker] Starting import of ${totalItems} pet locations...`)
       
       let processed = 0
       let duplicates = 0
       let errors = 0
+      let currentIndex = 0
       
       for (const item of items) {
         try {
           // Filter for Tag items only
           if (!item.name || !item.name.match(/^Tag \d+$/)) {
             continue
+          }
+          
+          currentIndex++
+          
+          // Show progress every 10 items
+          if (currentIndex % 10 === 0) {
+            console.log(`[Pet Tracker] Processing... ${currentIndex}/${totalItems} tags`)
           }
           
           // Validate location data
@@ -105,10 +118,23 @@ onBootstrap((e) => {
         }
       }
       
-      console.log(`[Pet Tracker] Import complete: ${processed} new, ${duplicates} duplicates, ${errors} errors`)
+      const duration = Date.now() - startTime
+      const totalProcessed = processed + duplicates
+      
+      console.log(`[Pet Tracker] ✅ Import complete in ${duration}ms`)
+      console.log(`[Pet Tracker] 📊 Results: ${totalProcessed}/${totalItems} processed (${processed} new, ${duplicates} existing, ${errors} errors)`)
+      
+      // Show database totals
+      try {
+        const collection = $app.findCollectionByNameOrId("pet_locations")
+        const totalRecords = $app.countRecordsByFilter(collection.id, "")
+        console.log(`[Pet Tracker] 💾 Database now contains ${totalRecords} total location records`)
+      } catch (e) {
+        // Ignore count error
+      }
       
     } catch (error) {
-      console.error("[Pet Tracker] Import failed:", error.message)
+      console.error("[Pet Tracker] ❌ Import failed:", error.message)
     }
   }
   
@@ -120,8 +146,11 @@ onBootstrap((e) => {
   importPetLocations()
   
   // Schedule 1-minute updates
+  let importCount = 0
   cronAdd("pet_location_import", "* * * * *", () => {
-    console.log("[Pet Tracker] Running scheduled import...")
+    importCount++
+    const now = new Date().toLocaleTimeString()
+    console.log(`[Pet Tracker] 🔄 Running scheduled import #${importCount} at ${now}`)
     importPetLocations()
   })
 })
