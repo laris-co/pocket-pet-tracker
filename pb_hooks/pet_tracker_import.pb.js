@@ -3,12 +3,11 @@
 // Pet tracker import with Apple Find My integration
 // Fixed version with proper JSVM scoping
 
-// Bootstrap hook - runs once when server starts
-onBootstrap((e) => {
-  console.log("[Pet Tracker] Bootstrap starting...")
-  
-  // Define import function INSIDE the hook to ensure proper scope
-  function importPetLocations() {
+// Global counter for scheduled imports
+let $importCount = 0
+
+// Global import function for cron access
+function $importPetLocations() {
     const startTime = Date.now()
     
     try {
@@ -136,21 +135,24 @@ onBootstrap((e) => {
     } catch (error) {
       console.error("[Pet Tracker] ❌ Import failed:", error.message)
     }
-  }
+}
+
+// Bootstrap hook - runs once when server starts
+onBootstrap((e) => {
+  console.log("[Pet Tracker] Bootstrap starting...")
   
   // Complete bootstrap first
   e.next()
   
   // Run initial import
   console.log("[Pet Tracker] Running initial import...")
-  importPetLocations()
+  $importPetLocations()
   
   // Schedule 1-minute updates
-  let importCount = 0
   cronAdd("pet_location_import", "* * * * *", () => {
-    importCount++
+    $importCount++
     const now = new Date().toLocaleTimeString()
-    console.log(`[Pet Tracker] 🔄 Running scheduled import #${importCount} at ${now}`)
-    importPetLocations()
+    console.log(`[Pet Tracker] 🔄 Running scheduled import #${$importCount} at ${now}`)
+    $importPetLocations()
   })
 })
