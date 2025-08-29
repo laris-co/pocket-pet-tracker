@@ -92,6 +92,80 @@ SELECT
     MAX(datetime) as latest_record
 FROM 'tag_data/**/*.parquet';
 
+-- State Counts
+SELECT 
+    'Battery Status' as metric,
+    battery as state,
+    COUNT(*) as count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+FROM 'tag_data/**/*.parquet'
+GROUP BY battery
+ORDER BY battery;
+
+SELECT 
+    'Accuracy Status' as metric,
+    CASE 
+        WHEN is_inaccurate = true THEN 'Inaccurate'
+        ELSE 'Accurate'
+    END as state,
+    COUNT(*) as count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+FROM 'tag_data/**/*.parquet'
+GROUP BY is_inaccurate;
+
+SELECT 
+    'Position Type' as metric,
+    positionType as state,
+    COUNT(*) as count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+FROM 'tag_data/**/*.parquet'
+WHERE positionType IS NOT NULL
+GROUP BY positionType;
+
+SELECT 
+    'Location Status' as metric,
+    CASE 
+        WHEN isOld = true THEN 'Old'
+        ELSE 'Current'
+    END as state,
+    COUNT(*) as count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+FROM 'tag_data/**/*.parquet'
+GROUP BY isOld;
+
+-- Accuracy Distribution
+SELECT 
+    'Accuracy Range' as metric,
+    CASE 
+        WHEN accuracy < 10 THEN '< 10m'
+        WHEN accuracy < 20 THEN '10-20m'
+        WHEN accuracy < 30 THEN '20-30m'
+        WHEN accuracy < 50 THEN '30-50m'
+        ELSE '50m+'
+    END as range,
+    COUNT(*) as count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
+FROM 'tag_data/**/*.parquet'
+GROUP BY range
+ORDER BY 
+    CASE range
+        WHEN '< 10m' THEN 1
+        WHEN '10-20m' THEN 2
+        WHEN '20-30m' THEN 3
+        WHEN '30-50m' THEN 4
+        ELSE 5
+    END;
+
+-- Daily Distribution
+SELECT 
+    'Daily Activity' as metric,
+    day as day_of_month,
+    COUNT(*) as locations,
+    COUNT(DISTINCT tag_id) as active_tags
+FROM 'tag_data/**/*.parquet'
+GROUP BY day
+ORDER BY day;
+
 -- Per-Tag Statistics
 SELECT 
     tag_id,
@@ -99,7 +173,9 @@ SELECT
     COUNT(*) as records,
     MIN(datetime) as first_seen,
     MAX(datetime) as last_seen,
-    ROUND(AVG(accuracy), 2) as avg_accuracy_m
+    ROUND(AVG(accuracy), 2) as avg_accuracy_m,
+    SUM(CASE WHEN is_inaccurate THEN 1 ELSE 0 END) as inaccurate_count,
+    MAX(battery) as last_battery
 FROM 'tag_data/**/*.parquet'
 GROUP BY tag_id, name
 ORDER BY tag_id;
