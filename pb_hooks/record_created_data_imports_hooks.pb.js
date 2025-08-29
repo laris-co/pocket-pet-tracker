@@ -31,32 +31,7 @@ onRecordCreate((e) => {
                 jsonContent = JSON.parse(jsonContent)
             } catch (err) {
                 console.log("[Data Import Hook] Could not parse JSON string")
-            }
-        }
-        
-        // If we have an array with too many items, it might be byte/char array
-        if (Array.isArray(jsonContent) && jsonContent.length > 1000) {
-            // Check if it looks like individual characters/bytes
-            const firstItem = jsonContent[0]
-            if ((typeof firstItem === 'string' && firstItem.length === 1) ||
-                (typeof firstItem === 'number' && firstItem >= 0 && firstItem <= 255)) {
-                
-                console.log("[Data Import Hook] Detected byte/char array, converting...")
-                let jsonStr = ""
-                for (let i = 0; i < jsonContent.length; i++) {
-                    if (typeof jsonContent[i] === 'string') {
-                        jsonStr += jsonContent[i]
-                    } else if (typeof jsonContent[i] === 'number') {
-                        jsonStr += String.fromCharCode(jsonContent[i])
-                    }
-                }
-                
-                try {
-                    jsonContent = JSON.parse(jsonStr)
-                    console.log("[Data Import Hook] Successfully converted to array with", jsonContent.length, "items")
-                } catch (err) {
-                    console.log("[Data Import Hook] Failed to parse converted string")
-                }
+                return
             }
         }
         
@@ -69,7 +44,7 @@ onRecordCreate((e) => {
             // Loop through and log tag names
             for (let i = 0; i < jsonContent.length; i++) {
                 const item = jsonContent[i]
-                if (item && item.name && item.name.match && item.name.match(/^Tag \d+$/)) {
+                if (item && item.name && typeof item.name === 'string' && item.name.match(/^Tag \d+$/)) {
                     tagCount++
                     const hasLocation = !!(item.location && item.location.latitude && item.location.longitude)
                     if (hasLocation) locationCount++
@@ -85,7 +60,9 @@ onRecordCreate((e) => {
                 console.log(`  ... and ${tagCount - 10} more tags`)
             }
             
-            console.log(`[Data Import Hook] Summary: ${tagCount} tags total, ${locationCount} with locations`)
+            if (tagCount > 0) {
+                console.log(`[Data Import Hook] Summary: ${tagCount} tags total, ${locationCount} with locations`)
+            }
         }
         
     } catch (err) {
