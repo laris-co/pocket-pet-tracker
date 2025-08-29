@@ -490,6 +490,14 @@ Closes #[issue-number]
 -   **Mistake**: Forgetting to provide the user with a link to a created resource.
 -   **Discovery**: The `gh` CLI is a powerful tool for interacting with GitHub, but it needs to be used carefully to avoid security restrictions.
 
+### PocketBase JavaScript API Patterns (2025-08-29)
+-   **Pattern**: Use `e.requestInfo()` to access parsed request data in JavaScript hooks - NOT `e.request.body()`
+-   **Discovery**: `toString(e.request.body)` is a global helper function for reading raw body as string
+-   **Pattern**: Request headers are accessible via `info.headers` with snake_case keys (e.g., `content_type`)
+-   **Mistake**: Assuming JavaScript API mirrors typical HTTP request patterns - PocketBase has its own API design
+-   **Discovery**: The request body in `e.request.body` is a Go `io.ReadCloser` interface, not directly readable in JS
+-   **Pattern**: Always check framework source code FIRST when debugging API issues, not as last resort
+
 ### Project-Specific Patterns
 -   *Example: The standard way we handle authentication state.*
 -   *Example: The required structure for a new API endpoint.*
