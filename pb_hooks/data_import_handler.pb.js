@@ -5,75 +5,83 @@
 
 routerAdd("POST", "/recv", (e) => {
   // Load utilities module inside handler
-  const utils = require(`${__hooks}/utils.js`)
-  const { PetUtils, LocationUtils, DbUtils, ImportUtils } = utils
-  
+  const utils = require(`${__hooks}/utils.js`);
+  const { PetUtils, LocationUtils, DbUtils, ImportUtils } = utils;
+
   // Helper function to process pet locations from imported data
   function processPetLocations(importRecord, items) {
     // Use ImportUtils for processing
-    const result = ImportUtils.processPetLocations($app, $security, items)
-    
-    console.log(`[Data Import] Location processing complete: ${result.processed} new, ${result.duplicates} duplicates, ${result.errors} errors`)
-    
+    const result = ImportUtils.processPetLocations($app, $security, items);
+
+    console.log(
+      `[Data Import] Location processing complete: ${result.processed} new, ${result.duplicates} duplicates, ${result.errors} errors`,
+    );
+
     // Update import record with processing results
     if (result.errors > 0) {
-      importRecord.set("error_message", `Processing completed with ${result.errors} errors`)
+      importRecord.set(
+        "error_message",
+        `Processing completed with ${result.errors} errors`,
+      );
     }
-    
-    return result.processed
+
+    return result.processed;
   }
-  
-  console.log("[Data Import] Request received at:", new Date().toISOString())
-  
+
+  console.log("[Data Import] Request received at:", new Date().toISOString());
+
   try {
     // Get request body using verified requestInfo() method
-    const info = e.requestInfo()
-    
+    const info = e.requestInfo();
+
     // Check if request has the expected format: { md5: "hash", content: [...] }
     if (info.body && info.body.md5 && info.body.content) {
-      console.log("[Data Import] Valid import format detected")
-      console.log("[Data Import] MD5 hash:", info.body.md5)
-      console.log("[Data Import] Content type:", Array.isArray(info.body.content) ? "array" : typeof info.body.content)
-      
+      console.log("[Data Import] Valid import format detected");
+      console.log("[Data Import] MD5 hash:", info.body.md5);
+      console.log(
+        "[Data Import] Content type:",
+        Array.isArray(info.body.content) ? "array" : typeof info.body.content,
+      );
+
       // Calculate item count
-      let itemCount = 1
+      let itemCount = 1;
       if (Array.isArray(info.body.content)) {
-        itemCount = info.body.content.length
-        console.log("[Data Import] Array with", itemCount, "items")
+        itemCount = info.body.content.length;
+        console.log("[Data Import] Array with", itemCount, "items");
       }
-      
+
       // Check for duplicate import by hash
-      let existingRecord = null
+      let existingRecord = null;
       try {
         existingRecord = $app.findFirstRecordByFilter(
           "data_imports",
           "content_hash = {:hash}",
-          { hash: info.body.md5 }
-        )
+          { hash: info.body.md5 },
+        );
       } catch (err) {
         // "sql: no rows" is expected when no duplicate exists
         if (err.message && !err.message.includes("no rows")) {
-          console.error("[Data Import] Database error:", err.message)
+          console.error("[Data Import] Database error:", err.message);
           return e.json(500, {
             status: "error",
-            error: "Database error"
-          })
+            error: "Database error",
+          });
         }
       }
-      
+
       if (existingRecord) {
-        const existingId = existingRecord.get("id")
-        console.log("[Data Import] Duplicate found, ID:", existingId)
+        const existingId = existingRecord.get("id");
+        console.log("[Data Import] Duplicate found, ID:", existingId);
         return e.json(200, {
           status: "duplicated",
           import_id: existingId,
-          imported_at: existingRecord.get("import_date")
-        })
+          imported_at: existingRecord.get("import_date"),
+        });
       }
-      
+
       // Create new import record
-      console.log("[Data Import] Creating new import record...")
-      const collection = $app.findCollectionByNameOrId("data_imports")
+      console.log("[Data Import] Creating new import record...");
+      const collection = $app.findCollectionByNameOrId("data_imports");
       const record = new Record(collection, {
         import_date: new Date().toISOString(),
         content_hash: info.body.md5,
@@ -81,79 +89,105 @@ routerAdd("POST", "/recv", (e) => {
         source: info.body.source || "api",
         status: "pending",
         item_count: itemCount,
-        error_message: null
-      })
-      
+        error_message: null,
+      });
+
       try {
-        $app.save(record)
-        const recordId = record.get("id")
-        console.log("[Data Import] ✅ Import saved successfully, ID:", recordId)
-        
+        $app.save(record);
+        const recordId = record.get("id");
+        console.log(
+          "[Data Import] ✅ Import saved successfully, ID:",
+          recordId,
+        );
+
         // Optional: Process pet locations immediately if it's Items.data format
-        let processedCount = 0
-        if (Array.isArray(info.body.content)) {
-          const firstItem = info.body.content[0]
-          if (firstItem && firstItem.name && PetUtils.isValidPetTag(firstItem.name)) {
-            console.log("[Data Import] Detected pet tracker data, processing locations...")
-            processedCount = processPetLocations(record, info.body.content)
-            
-            // Update status based on processing result
-            record.set("status", processedCount > 0 ? "processed" : "skipped")
-            $app.save(record)
-          }
-        }
-        
+        // let processedCount = 0
+        // if (Array.isArray(info.body.content)) {
+        //   const firstItem = info.body.content[0]
+        //   if (firstItem && firstItem.name && PetUtils.isValidPetTag(firstItem.name)) {
+        //     console.log("[Data Import] Detected pet tracker data, processing locations...")
+
+        //     // Log all tag names found in the import
+        //     console.log("[Data Import] Found tags:")
+        //     const tagNames = []
+        //     info.body.content.forEach((item, index) => {
+        //       if (item.name && PetUtils.isValidPetTag(item.name)) {
+        //         tagNames.push(item.name)
+        //         // Log first 10 tags individually, then summarize the rest
+        //         if (tagNames.length <= 10) {
+        //           console.log(`  - ${item.name}${item.location ? ' ✓ (has location)' : ' ✗ (no location)'}`)
+        //         }
+        //       }
+        //     })
+
+        //     if (tagNames.length > 10) {
+        //       console.log(`  ... and ${tagNames.length - 10} more tags`)
+        //     }
+        //     console.log(`[Data Import] Total valid tags: ${tagNames.length}`)
+
+        //     processedCount = processPetLocations(record, info.body.content)
+
+        //     // Update status based on processing result
+        //     record.set("status", processedCount > 0 ? "processed" : "skipped")
+        //     $app.save(record)
+        //   }
+        // }
+
         return e.json(200, {
           status: "ok",
           import_id: recordId,
           items_count: itemCount,
-          processed_locations: processedCount
-        })
-        
+          // processed_locations: processedCount,
+        });
       } catch (saveError) {
-        console.error("[Data Import] Failed to save:", saveError.message)
+        console.error("[Data Import] Failed to save:", saveError.message);
         return e.json(500, {
           status: "error",
-          error: saveError.message
-        })
+          error: saveError.message,
+        });
       }
-      
     } else {
       // Fallback to original debug behavior for backward compatibility
-      console.log("[Data Import] Legacy format or debug request")
-      
+      console.log("[Data Import] Legacy format or debug request");
+
       // Try to parse as direct array/object (original behavior)
       if (Array.isArray(info.body)) {
-        console.log("[Data Import] Direct array received, length:", info.body.length)
+        console.log(
+          "[Data Import] Direct array received, length:",
+          info.body.length,
+        );
         return e.json(200, {
           success: true,
           message: "Debug mode - direct array received",
           data_type: "array",
           count: info.body.length,
-          first_item: info.body[0] ? {
-            name: info.body[0].name,
-            has_location: !!info.body[0].location
-          } : null,
-          data: info.body
-        })
+          first_item: info.body[0]
+            ? {
+                name: info.body[0].name,
+                has_location: !!info.body[0].location,
+              }
+            : null,
+          data: info.body,
+        });
       } else {
-        console.log("[Data Import] Direct object received")
+        console.log("[Data Import] Direct object received");
         return e.json(200, {
           success: true,
           message: "Debug mode - direct object received",
           data_type: typeof info.body,
-          data: info.body
-        })
+          data: info.body,
+        });
       }
     }
-    
   } catch (error) {
-    console.error("[Data Import] Unexpected error:", error.message)
+    console.error("[Data Import] Unexpected error:", error.message);
     return e.json(500, {
       success: false,
-      error: error.message
-    })
+      error: error.message,
+    });
   }
-})
+});
 
-console.log("[Data Import] POST /recv endpoint registered - accepts {md5, content} format")
+console.log(
+  "[Data Import] POST /recv endpoint registered - accepts {md5, content} format",
+);
