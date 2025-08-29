@@ -121,8 +121,8 @@ routerAdd("POST", "/recv", (e) => {
         if (err.message && !err.message.includes("no rows")) {
           console.error("[Data Import] Database error:", err.message)
           return e.json(500, {
-            success: false,
-            error: "Database error while checking for duplicates"
+            status: "error",
+            error: "Database error"
           })
         }
       }
@@ -131,11 +131,9 @@ routerAdd("POST", "/recv", (e) => {
         const existingId = existingRecord.get("id")
         console.log("[Data Import] Duplicate found, ID:", existingId)
         return e.json(200, {
-          success: false,
-          message: "Data already imported",
+          status: "duplicated",
           import_id: existingId,
-          imported_at: existingRecord.get("import_date"),
-          status: existingRecord.get("status")
+          imported_at: existingRecord.get("import_date")
         })
       }
       
@@ -172,21 +170,17 @@ routerAdd("POST", "/recv", (e) => {
         }
         
         return e.json(200, {
-          success: true,
+          status: "ok",
           import_id: recordId,
           items_count: itemCount,
-          status: record.get("status"),
-          processed_locations: processedCount,
-          message: processedCount > 0 
-            ? `Import successful, ${processedCount} new locations added`
-            : "Import successful, data stored for processing"
+          processed_locations: processedCount
         })
         
       } catch (saveError) {
         console.error("[Data Import] Failed to save:", saveError.message)
         return e.json(500, {
-          success: false,
-          error: "Failed to save import: " + saveError.message
+          status: "error",
+          error: saveError.message
         })
       }
       

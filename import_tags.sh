@@ -58,35 +58,35 @@ if [ $? -ne 0 ]; then
 fi
 
 # Parse response using jq
-SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+STATUS=$(echo "$RESPONSE" | jq -r '.status')
 IMPORT_ID=$(echo "$RESPONSE" | jq -r '.import_id')
 ITEMS_COUNT=$(echo "$RESPONSE" | jq -r '.items_count')
-MESSAGE=$(echo "$RESPONSE" | jq -r '.message')
-STATUS=$(echo "$RESPONSE" | jq -r '.status')
 PROCESSED=$(echo "$RESPONSE" | jq -r '.processed_locations')
+IMPORTED_AT=$(echo "$RESPONSE" | jq -r '.imported_at')
+ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error')
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}📥 Response:${NC}"
 echo ""
 
-if [ "$SUCCESS" = "true" ]; then
+if [ "$STATUS" = "ok" ]; then
     echo -e "${GREEN}✅ Import Successful!${NC}"
     echo ""
     echo -e "${YELLOW}📋 Details:${NC}"
     echo -e "  • Import ID: ${GREEN}$IMPORT_ID${NC}"
     echo -e "  • Total Items: ${GREEN}$ITEMS_COUNT${NC}"
-    echo -e "  • Status: ${GREEN}$STATUS${NC}"
     echo -e "  • Processed Locations: ${GREEN}$PROCESSED${NC}"
-    echo -e "  • Message: $MESSAGE"
-elif [ "$SUCCESS" = "false" ]; then
-    echo -e "${YELLOW}⚠️  Import Skipped${NC}"
+elif [ "$STATUS" = "duplicated" ]; then
+    echo -e "${YELLOW}⚠️  Import Duplicated${NC}"
     echo ""
     echo -e "${YELLOW}📋 Details:${NC}"
-    echo -e "  • Message: $MESSAGE"
-    if [ ! -z "$IMPORT_ID" ] && [ "$IMPORT_ID" != "null" ]; then
-        echo -e "  • Existing Import ID: ${YELLOW}$IMPORT_ID${NC}"
-        echo -e "  • Status: ${YELLOW}$STATUS${NC}"
-    fi
+    echo -e "  • Existing Import ID: ${YELLOW}$IMPORT_ID${NC}"
+    echo -e "  • Originally Imported: ${YELLOW}$IMPORTED_AT${NC}"
+elif [ "$STATUS" = "error" ]; then
+    echo -e "${RED}❌ Import Error${NC}"
+    echo ""
+    echo -e "${RED}📋 Details:${NC}"
+    echo -e "  • Error: ${RED}$ERROR_MSG${NC}"
 else
     echo -e "${RED}❌ Unexpected Response:${NC}"
     echo "$RESPONSE" | jq '.'
