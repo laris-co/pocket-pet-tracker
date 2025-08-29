@@ -164,16 +164,20 @@ cronAdd("pet_location_import", "* * * * *", () => {
     // Read Items.data file
     const rawData = $os.readFile("Items.data")
     
-    // Convert byte array to string
-    let dataStr = ""
-    if (typeof rawData === 'object' && rawData.length) {
-      for (let i = 0; i < rawData.length; i++) {
-        dataStr += String.fromCharCode(rawData[i])
-      }
+    // Convert byte array to string (robust for PocketBase JSVM)
+    let dataStr = "";
+    if (typeof rawData === 'object' && rawData !== null && rawData.length !== undefined) {
+        // rawData is likely a byte array (e.g., Uint8Array or plain array of numbers)
+        // String.fromCharCode is used for byte-to-char conversion.
+        // Note: TextDecoder is not guaranteed to be available in all JSVM environments.
+        for (let i = 0; i < rawData.length; i++) {
+            dataStr += String.fromCharCode(rawData[i]);
+        }
     } else {
-      dataStr = rawData
+        // Fallback: rawData might already be a string (e.g., if file is small or text-only)
+        dataStr = rawData;
     }
-    
+
     const items = JSON.parse(dataStr)
     const totalItems = items.filter(item => item.name && item.name.match(/^Tag \d+$/)).length
     
