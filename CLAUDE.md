@@ -485,6 +485,11 @@ Closes #[issue-number]
 -   *Example: A shell command alias that speeds up a common task.*
 -   *Example: A design pattern that solved a recurring problem in the codebase.*
 
+### Session Learnings (2025-08-29)
+-   **Pattern**: When creating multi-line content for a shell command, it's more reliable to write the content to a temporary file and pass the file path to the command.
+-   **Mistake**: Forgetting to provide the user with a link to a created resource.
+-   **Discovery**: The `gh` CLI is a powerful tool for interacting with GitHub, but it needs to be used carefully to avoid security restrictions.
+
 ### Project-Specific Patterns
 -   *Example: The standard way we handle authentication state.*
 -   *Example: The required structure for a new API endpoint.*
