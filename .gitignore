@@ -10,6 +10,9 @@ pb_logs.db
 *.sqlite
 *.sqlite3
 
+# Tag data exports (Parquet files)
+tag_data/
+
 # Backup files
 *.backup
 backups/
