@@ -1,6 +1,6 @@
 -- DuckDB Incremental Export with Deduplication
 -- Only exports new location records that don't already exist in the Parquet files
--- Maintains same MD5 hash format as PocketBase for consistency
+-- Uses time-based partitioning: tag_id=X/year=YYYY/month=MM/
 
 -- First, create a temporary table with existing hashes (if files exist)
 CREATE TEMP TABLE IF NOT EXISTS existing_hashes AS 
@@ -35,16 +35,19 @@ COPY (
             location.locationFinished,
             productType,
             serialNumber,
-            owner
+            owner,
+            -- Add year and month for partitioning
+            YEAR(to_timestamp(location.timeStamp/1000)) as year,
+            MONTH(to_timestamp(location.timeStamp/1000)) as month
         FROM read_json_auto('Items.data', format='array')
         WHERE name LIKE 'Tag %'
     )
     SELECT * FROM new_locations
     WHERE location_hash NOT IN (SELECT location_hash FROM existing_hashes)
-    ORDER BY tag_id, timestamp_ms DESC
+    ORDER BY tag_id, year, month, timestamp_ms DESC
 ) TO 'tag_data' (
     FORMAT PARQUET,
-    PARTITION_BY (tag_id),
+    PARTITION_BY (tag_id, year, month),
     FILENAME_PATTERN 'locations_{uuid}',
     APPEND
 );
