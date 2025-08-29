@@ -49,7 +49,8 @@ init_directories() {
 
 # Check if this is first run or incremental
 check_existing_data() {
-    if [ -d "$DATA_DIR" ] && ls "$DATA_DIR"/tag_id=*/locations.parquet 1> /dev/null 2>&1; then
+    # Check for any parquet files in the tag_data directory structure
+    if [ -d "$DATA_DIR" ] && find "$DATA_DIR" -name "*.parquet" -type f 2>/dev/null | grep -q .; then
         return 0  # Data exists
     else
         return 1  # No data
