@@ -7,6 +7,10 @@ onRecordCreate((e) => {
         e.next()
         return
     }
+    
+    // Load utilities module inside handler
+    const utils = require(`${__hooks}/utils.js`)
+    const { PetUtils } = utils
     console.log("========================================")
     console.log("[Data Import Hook] 🎯 New import created!")
     console.log("[Data Import Hook] Record ID:", e.record.get("id"))
@@ -41,10 +45,10 @@ onRecordCreate((e) => {
             let tagCount = 0
             let locationCount = 0
             
-            // Loop through and log tag names
+            // Loop through and log tag names using PetUtils
             for (let i = 0; i < jsonContent.length; i++) {
                 const item = jsonContent[i]
-                if (item && item.name && typeof item.name === 'string' && item.name.match(/^Tag \d+$/)) {
+                if (item && item.name && PetUtils.isValidPetTag(item.name)) {
                     tagCount++
                     const hasLocation = !!(item.location && item.location.latitude && item.location.longitude)
                     if (hasLocation) locationCount++
