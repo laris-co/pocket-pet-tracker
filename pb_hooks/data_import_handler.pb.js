@@ -95,6 +95,25 @@ routerAdd("POST", "/recv", (e) => {
           const firstItem = info.body.content[0]
           if (firstItem && firstItem.name && PetUtils.isValidPetTag(firstItem.name)) {
             console.log("[Data Import] Detected pet tracker data, processing locations...")
+            
+            // Log all tag names found in the import
+            console.log("[Data Import] Found tags:")
+            const tagNames = []
+            info.body.content.forEach((item, index) => {
+              if (item.name && PetUtils.isValidPetTag(item.name)) {
+                tagNames.push(item.name)
+                // Log first 10 tags individually, then summarize the rest
+                if (tagNames.length <= 10) {
+                  console.log(`  - ${item.name}${item.location ? ' ✓ (has location)' : ' ✗ (no location)'}`)
+                }
+              }
+            })
+            
+            if (tagNames.length > 10) {
+              console.log(`  ... and ${tagNames.length - 10} more tags`)
+            }
+            console.log(`[Data Import] Total valid tags: ${tagNames.length}`)
+            
             processedCount = processPetLocations(record, info.body.content)
             
             // Update status based on processing result
