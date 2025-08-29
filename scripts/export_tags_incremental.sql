@@ -1,6 +1,6 @@
 -- DuckDB Incremental Export with Deduplication
 -- Only exports new location records that don't already exist in the Parquet files
--- Uses time-based partitioning: tag_id=X/year=YYYY/month=MM/
+-- Uses time-based partitioning: tag_id=X/year=YYYY/month=MM/day=DD/
 
 -- First, create a temporary table with existing hashes (if files exist)
 CREATE TEMP TABLE IF NOT EXISTS existing_hashes AS 
@@ -36,18 +36,19 @@ COPY (
             productType,
             serialNumber,
             owner,
-            -- Add year and month for partitioning
+            -- Add year, month, and day for partitioning
             YEAR(to_timestamp(location.timeStamp/1000)) as year,
-            MONTH(to_timestamp(location.timeStamp/1000)) as month
+            MONTH(to_timestamp(location.timeStamp/1000)) as month,
+            DAY(to_timestamp(location.timeStamp/1000)) as day
         FROM read_json_auto('Items.data', format='array')
         WHERE name LIKE 'Tag %'
     )
     SELECT * FROM new_locations
     WHERE location_hash NOT IN (SELECT location_hash FROM existing_hashes)
-    ORDER BY tag_id, year, month, timestamp_ms DESC
+    ORDER BY tag_id, year, month, day, timestamp_ms DESC
 ) TO 'tag_data' (
     FORMAT PARQUET,
-    PARTITION_BY (tag_id, year, month),
+    PARTITION_BY (tag_id, year, month, day),
     FILENAME_PATTERN 'locations_{uuid}',
     APPEND
 );

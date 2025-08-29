@@ -1,6 +1,6 @@
 -- DuckDB Export Script for Pet Location Data
 -- Exports all tag locations to Parquet files with time-based Hive-style partitioning
--- Directory structure: tag_data/tag_id=X/year=YYYY/month=MM/locations.parquet
+-- Directory structure: tag_data/tag_id=X/year=YYYY/month=MM/day=DD/locations.parquet
 
 -- Export all tags with time-based partitioning
 COPY (
@@ -28,15 +28,16 @@ COPY (
         productType,
         serialNumber,
         owner,
-        -- Add year and month columns for partitioning
+        -- Add year, month, and day columns for partitioning
         YEAR(to_timestamp(location.timeStamp/1000)) as year,
-        MONTH(to_timestamp(location.timeStamp/1000)) as month
+        MONTH(to_timestamp(location.timeStamp/1000)) as month,
+        DAY(to_timestamp(location.timeStamp/1000)) as day
     FROM read_json_auto('Items.data', format='array')
     WHERE name LIKE 'Tag %'
-    ORDER BY tag_id, year, month, timestamp_ms DESC
+    ORDER BY tag_id, year, month, day, timestamp_ms DESC
 ) TO 'tag_data' (
     FORMAT PARQUET,
-    PARTITION_BY (tag_id, year, month),
+    PARTITION_BY (tag_id, year, month, day),
     FILENAME_PATTERN 'locations',
     OVERWRITE_OR_IGNORE
 );
