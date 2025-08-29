@@ -1,25 +1,6 @@
 |   category    | total_tags | total_records | unique_locations |   earliest_record   |    latest_record    |
 |---------------|-----------:|--------------:|-----------------:|---------------------|---------------------|
 | Overall Stats | 28         | 28            | 28               | 2025-08-29 10:43:52 | 2025-08-29 11:32:11 |
-|     metric     | state | count | percentage |
-|----------------|------:|------:|-----------:|
-| Battery Status | 1     | 28    | 100.0      |
-|     metric      |  state   | count | percentage |
-|-----------------|----------|------:|-----------:|
-| Accuracy Status | Accurate | 28    | 100.0      |
-|    metric     |    state     | count | percentage |
-|---------------|--------------|------:|-----------:|
-| Position Type | crowdsourced | 28    | 100.0      |
-|     metric      |  state  | count | percentage |
-|-----------------|---------|------:|-----------:|
-| Location Status | Current | 28    | 100.0      |
-|     metric     | range  | count | percentage |
-|----------------|--------|------:|-----------:|
-| Accuracy Range | 10-20m | 1     | 3.57       |
-| Accuracy Range | 20-30m | 27    | 96.43      |
-|     metric     | day_of_month | locations | active_tags |
-|----------------|-------------:|----------:|------------:|
-| Daily Activity | 29           | 28        | 28          |
 | tag_id |  name  | records |     first_seen      |      last_seen      | avg_accuracy_m | inaccurate_count | last_battery |
 |-------:|--------|--------:|---------------------|---------------------|---------------:|-----------------:|-------------:|
 | 1      | Tag 1  | 1       | 2025-08-29 10:43:52 | 2025-08-29 10:43:52 | 17.49          | 0                | 1            |
