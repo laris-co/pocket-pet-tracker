@@ -7,9 +7,8 @@ onRecordCreate((e) => {
     return;
   }
 
-  // Load utilities module inside handler
   const utils = require(`${__hooks}/utils.js`);
-  const { PetUtils } = utils;
+  const { PetUtils, LocationUtils, DbUtils, ImportUtils } = utils;
 
   console.log("========================================");
   console.log("[onRecordCreate Import Hook] 🎯 New import created!");
@@ -46,6 +45,8 @@ onRecordCreate((e) => {
       // Loop through and log tag names using PetUtils
       for (let i = 0; i < jsonContent.length; i++) {
         const item = jsonContent[i];
+        // console.log(JSON.stringify(item.location.timeStamp));
+        // console.log(JSON.stringify(item.location.positionType));
         if (item && item.name && PetUtils.isValidPetTag(item.name)) {
           tagCount++;
           const hasLocation = !!(
@@ -55,18 +56,20 @@ onRecordCreate((e) => {
           );
           if (hasLocation) locationCount++;
 
+          // print name, loc, hash, simple not icon or special char
+          // hash should call from utils
+          let rowHash = LocationUtils.createLocationHash(
+            $security,
+            item.name,
+            item.location,
+          );
           // Log first 10 tags in detail
-          if (tagCount <= 10) {
-            console.log(
-              `  - ${item.name}${hasLocation ? " ✓ (has location)" : " ✗ (no location)"}`,
-            );
-          }
         }
       }
 
-      if (tagCount > 10) {
-        console.log(`  ... and ${tagCount - 10} more tags`);
-      }
+      // if (tagCount > 10) {
+      //   console.log(`  ... and ${tagCount - 10} more tags`);
+      // }
 
       if (tagCount > 0) {
         console.log(
