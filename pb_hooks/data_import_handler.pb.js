@@ -4,89 +4,23 @@
 // Test with: jq -n --slurpfile data Items.data '{md5: "hash", content: $data[0]}' | curl -X POST http://localhost:8090/recv -H "Content-Type: application/json" -d @-
 
 routerAdd("POST", "/recv", (e) => {
+  // Load utilities module inside handler
+  const utils = require(`${__hooks}/utils.js`)
+  const { PetUtils, LocationUtils, DbUtils, ImportUtils } = utils
+  
   // Helper function to process pet locations from imported data
   function processPetLocations(importRecord, items) {
-    let processed = 0
-    let duplicates = 0
-    let errors = 0
+    // Use ImportUtils for processing
+    const result = ImportUtils.processPetLocations($app, $security, items)
     
-    for (const item of items) {
-      try {
-        // Filter for Tag items only
-        if (!item.name || !item.name.match(/^Tag \d+$/)) {
-          continue
-        }
-        
-        // Skip if no location data
-        if (!item.location || !item.location.latitude || !item.location.longitude) {
-          continue
-        }
-        
-        const loc = item.location
-        
-        // Create location hash for deduplication
-        const hashInput = item.name + 
-                         (loc.timeStamp || new Date().toISOString()) + 
-                         loc.latitude.toString() + 
-                         loc.longitude.toString() + 
-                         (loc.horizontalAccuracy || 0).toString()
-        const locationHash = $security.md5(hashInput)
-        
-        // Check for duplicates
-        let isDuplicate = false
-        try {
-          const existing = $app.findFirstRecordByFilter(
-            "pet_locations", 
-            "location_hash = {:hash}",
-            { hash: locationHash }
-          )
-          if (existing) {
-            isDuplicate = true
-          }
-        } catch (err) {
-          // "no rows" is expected - not a duplicate
-          if (err.message && !err.message.includes("no rows")) {
-            console.error(`[Data Import] Location check error for ${item.name}:`, err.message)
-            errors++
-            continue
-          }
-        }
-        
-        if (isDuplicate) {
-          duplicates++
-          continue
-        }
-        
-        // Create new location record
-        const locCollection = $app.findCollectionByNameOrId("pet_locations")
-        const locRecord = new Record(locCollection, {
-          pet_name: item.name,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          accuracy: loc.horizontalAccuracy || 0,
-          timestamp: new Date(loc.timeStamp).toISOString(),
-          battery_status: item.batteryStatus || 1,
-          is_inaccurate: loc.isInaccurate || false,
-          location_hash: locationHash
-        })
-        
-        $app.save(locRecord)
-        processed++
-        
-      } catch (recordError) {
-        console.error(`[Data Import] Error processing ${item.name}:`, recordError.message)
-        errors++
-      }
-    }
-    
-    console.log(`[Data Import] Location processing complete: ${processed} new, ${duplicates} duplicates, ${errors} errors`)
+    console.log(`[Data Import] Location processing complete: ${result.processed} new, ${result.duplicates} duplicates, ${result.errors} errors`)
     
     // Update import record with processing results
-    if (errors > 0) {
-      importRecord.set("error_message", `Processing completed with ${errors} errors`)
+    if (result.errors > 0) {
+      importRecord.set("error_message", `Processing completed with ${result.errors} errors`)
     }
     
-    return processed
+    return result.processed
   }
   
   console.log("[Data Import] Request received at:", new Date().toISOString())
@@ -159,7 +93,7 @@ routerAdd("POST", "/recv", (e) => {
         let processedCount = 0
         if (Array.isArray(info.body.content)) {
           const firstItem = info.body.content[0]
-          if (firstItem && firstItem.name && firstItem.name.match(/^Tag \d+$/)) {
+          if (firstItem && firstItem.name && PetUtils.isValidPetTag(firstItem.name)) {
             console.log("[Data Import] Detected pet tracker data, processing locations...")
             processedCount = processPetLocations(record, info.body.content)
             
