@@ -23,19 +23,18 @@ fi
 # Get source name from argument or use default
 SOURCE_NAME=${1:-"manual_import"}
 
-# Generate unique MD5 hash with timestamp
-TIMESTAMP=$(date +%s)
-UNIQUE_STRING="${SOURCE_NAME}_${TIMESTAMP}"
-MD5_HASH=$(echo -n "$UNIQUE_STRING" | md5 -q)
+# Generate MD5 hash of Items.data file content for proper deduplication
+MD5_HASH=$(md5 -q "$ITEMS_FILE")
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}🏷️  Pocket Pet Tracker - Tag Import${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${YELLOW}📁 Data file:${NC} $ITEMS_FILE"
+echo -e "${YELLOW}📊 File size:${NC} $(wc -c < "$ITEMS_FILE") bytes"
 echo -e "${YELLOW}🎯 Target URL:${NC} $API_URL"
 echo -e "${YELLOW}📝 Source:${NC} $SOURCE_NAME"
-echo -e "${YELLOW}🔑 MD5 Hash:${NC} $MD5_HASH"
+echo -e "${YELLOW}🔑 Content MD5:${NC} $MD5_HASH"
 echo -e "${YELLOW}⏰ Timestamp:${NC} $(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
