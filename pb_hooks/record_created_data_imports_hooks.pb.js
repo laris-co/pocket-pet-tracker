@@ -2,11 +2,6 @@
 
 // Track data_imports record creation and log tag names
 onRecordCreate((e) => {
-  if (e.record.tableName() !== "data_imports") {
-    e.next();
-    return;
-  }
-
   // Load utilities module inside handler
   const utils = require(`${__hooks}/utils.js`);
   const { PetUtils } = utils;
@@ -15,25 +10,17 @@ onRecordCreate((e) => {
   console.log("[onRecordCreate Import Hook] 🎯 New import created!");
   console.log("[onRecordCreate Import Hook] Record ID:", e.record.get("id"));
   console.log("[onRecordCreate Import Hook] Source:", e.record.get("source"));
-  console.log(
-    "[onRecordCreate Import Hook] Import date:",
-    e.record.get("import_date"),
-  );
-  console.log(
-    "[onRecordCreate Import Hook] Content hash:",
-    e.record.get("content_hash"),
-  );
+  console.log("[Import Hook] Import date:", e.record.get("import_date"));
+  console.log("[Import Hook] Content hash:", e.record.get("content_hash"));
 
   // Get item count and status which were already calculated and stored
   const itemCount = e.record.get("item_count");
   const status = e.record.get("status");
 
-  console.log("[onRecordCreate Import Hook] Item count:", itemCount);
-  console.log("[onRecordCreate Import Hook] Status:", status);
+  console.log("[Import Hook] Item count:", itemCount);
+  console.log("[Import Hook] Status:", status);
 
-  // Try to read and parse JSON content to show tag names
   try {
-    // Always parse the JSON content - PocketBase returns it as string/byte array
     // Cat Lab's workaround:
     let jsonContent = JSON.parse(e.record.get("json_content"));
 
@@ -48,24 +35,7 @@ onRecordCreate((e) => {
         const item = jsonContent[i];
         if (item && item.name && PetUtils.isValidPetTag(item.name)) {
           tagCount++;
-          const hasLocation = !!(
-            item.location &&
-            item.location.latitude &&
-            item.location.longitude
-          );
-          if (hasLocation) locationCount++;
-
-          // Log first 10 tags in detail
-          if (tagCount <= 10) {
-            console.log(
-              `  - ${item.name}${hasLocation ? " ✓ (has location)" : " ✗ (no location)"}`,
-            );
-          }
         }
-      }
-
-      if (tagCount > 10) {
-        console.log(`  ... and ${tagCount - 10} more tags`);
       }
 
       if (tagCount > 0) {
