@@ -6,7 +6,7 @@
 // Main Handler - Clean and Focused (All functions inside handler for PocketBase compatibility)
 routerAdd("POST", "/recv", (e) => {
   const utils = require(`${__hooks}/utils.js`)
-  const { DbUtils } = utils
+  const { DbUtils, ImportUtils } = utils
 
   // Configuration constants
   const CONFIG = {
@@ -110,7 +110,7 @@ routerAdd("POST", "/recv", (e) => {
 
     console.log("[Data Import] Valid import format detected")
     console.log("[Data Import] MD5 hash:", body.md5)
-    console.log("[Data Import] Content type:", Array.isArray(body.content) ? "array" : typeof body.content)
+    console.log("[Data Import] Content type:", ImportUtils.getContentType(body.content))
 
     // 2. Check for duplicates
     const duplicate = checkForDuplicate($app, body.md5)

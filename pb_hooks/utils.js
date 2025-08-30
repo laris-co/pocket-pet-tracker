@@ -130,6 +130,14 @@ const PaginationUtils = {
  */
 const ImportUtils = {
   /**
+   * Get human-readable content type description
+   * Returns "array" for arrays, otherwise the typeof result
+   */
+  getContentType: function(content) {
+    return Array.isArray(content) ? "array" : typeof content
+  },
+  
+  /**
    * Process array of pet location items
    * Returns { processed, duplicates, errors } counts
    */
