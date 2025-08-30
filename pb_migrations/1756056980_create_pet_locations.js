@@ -58,9 +58,21 @@ migrate((app) => {
         min: 32,
         max: 32,
         pattern: "^[a-f0-9]{32}$"
+      },
+      {
+        name: "import_id",
+        type: "text",
+        required: false,
+        min: null,
+        max: null,
+        pattern: ""
       }
     ],
-    indexes: ["CREATE UNIQUE INDEX idx_location_hash ON pet_locations (location_hash)"],
+    indexes: [
+      "CREATE UNIQUE INDEX idx_location_hash ON pet_locations (location_hash)",
+      "CREATE INDEX idx_pet_name_timestamp ON pet_locations (pet_name, timestamp DESC)",
+      "CREATE INDEX idx_timestamp ON pet_locations (timestamp DESC)"
+    ],
     listRule: null,
     viewRule: null,
     createRule: null,
