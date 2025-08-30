@@ -8,26 +8,6 @@ routerAdd("POST", "/recv", (e) => {
   const utils = require(`${__hooks}/utils.js`);
   const { PetUtils, LocationUtils, DbUtils, ImportUtils } = utils;
 
-  // Helper function to process pet locations from imported data
-  function processPetLocations(importRecord, items) {
-    // Use ImportUtils for processing
-    const result = ImportUtils.processPetLocations($app, $security, items);
-
-    console.log(
-      `[Data Import] Location processing complete: ${result.processed} new, ${result.duplicates} duplicates, ${result.errors} errors`,
-    );
-
-    // Update import record with processing results
-    if (result.errors > 0) {
-      importRecord.set(
-        "error_message",
-        `Processing completed with ${result.errors} errors`,
-      );
-    }
-
-    return result.processed;
-  }
-
   console.log("[Data Import] Request received at:", new Date().toISOString());
 
   try {
@@ -96,42 +76,9 @@ routerAdd("POST", "/recv", (e) => {
         $app.save(record);
         const recordId = record.get("id");
         console.log(
-          "[Data Import] ✅ Import saved successfully, ID:",
-          recordId,
+          "[Data Import] ✅ Import saved successfully, from Hash:",
+          info.body.md5,
         );
-
-        // Optional: Process pet locations immediately if it's Items.data format
-        // let processedCount = 0
-        // if (Array.isArray(info.body.content)) {
-        //   const firstItem = info.body.content[0]
-        //   if (firstItem && firstItem.name && PetUtils.isValidPetTag(firstItem.name)) {
-        //     console.log("[Data Import] Detected pet tracker data, processing locations...")
-
-        //     // Log all tag names found in the import
-        //     console.log("[Data Import] Found tags:")
-        //     const tagNames = []
-        //     info.body.content.forEach((item, index) => {
-        //       if (item.name && PetUtils.isValidPetTag(item.name)) {
-        //         tagNames.push(item.name)
-        //         // Log first 10 tags individually, then summarize the rest
-        //         if (tagNames.length <= 10) {
-        //           console.log(`  - ${item.name}${item.location ? ' ✓ (has location)' : ' ✗ (no location)'}`)
-        //         }
-        //       }
-        //     })
-
-        //     if (tagNames.length > 10) {
-        //       console.log(`  ... and ${tagNames.length - 10} more tags`)
-        //     }
-        //     console.log(`[Data Import] Total valid tags: ${tagNames.length}`)
-
-        //     processedCount = processPetLocations(record, info.body.content)
-
-        //     // Update status based on processing result
-        //     record.set("status", processedCount > 0 ? "processed" : "skipped")
-        //     $app.save(record)
-        //   }
-        // }
 
         return e.json(200, {
           status: "ok",
@@ -149,7 +96,6 @@ routerAdd("POST", "/recv", (e) => {
     } else {
       // Fallback to original debug behavior for backward compatibility
       console.log("[Data Import] Legacy format or debug request");
-
       // Try to parse as direct array/object (original behavior)
       if (Array.isArray(info.body)) {
         console.log(
