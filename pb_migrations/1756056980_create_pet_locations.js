@@ -68,11 +68,7 @@ migrate((app) => {
         pattern: ""
       }
     ],
-    indexes: [
-      "CREATE UNIQUE INDEX idx_location_hash ON pet_locations (location_hash)",
-      "CREATE INDEX idx_pet_name_timestamp ON pet_locations (pet_name, timestamp DESC)",
-      "CREATE INDEX idx_timestamp ON pet_locations (timestamp DESC)"
-    ],
+    indexes: ["CREATE UNIQUE INDEX idx_location_hash ON pet_locations (location_hash)"],
     listRule: null,
     viewRule: null,
     createRule: null,
