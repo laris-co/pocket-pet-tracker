@@ -7,7 +7,7 @@
 routerAdd("POST", "/recv", (e) => {
   const utils = require(`${__hooks}/utils.js`)
   const { DbUtils } = utils
-  
+
   // Configuration constants
   const CONFIG = {
     COLLECTIONS: { DATA_IMPORTS: "data_imports" },
@@ -20,17 +20,17 @@ routerAdd("POST", "/recv", (e) => {
     if (!body?.md5 || !body?.content) {
       return { valid: false, error: "Missing required fields: md5 and content" }
     }
-    
-    if (!isValidMd5Hash(body.md5)) {
-      return { valid: false, error: "Invalid MD5 hash format (must be 32 hex characters)" }
-    }
-    
+
+    // if (!isValidMd5Hash(body.md5)) {
+    //   return { valid: false, error: "Invalid MD5 hash format (must be 32 hex characters)" }
+    // }
+
     return { valid: true }
   }
 
-  function isValidMd5Hash(hash) {
-    return typeof hash === 'string' && /^[a-f0-9]{32}$/i.test(hash)
-  }
+  // function isValidMd5Hash(hash) {
+  //   return typeof hash === 'string' && /^[a-f0-9]{32}$/i.test(hash)
+  // }
 
   // Business Logic Functions
   function checkForDuplicate($app, hash) {
@@ -57,15 +57,15 @@ routerAdd("POST", "/recv", (e) => {
       json_content: requestData.content,
       source: requestData.source || CONFIG.SOURCES.API,
       status: CONFIG.STATUSES.PENDING,
-      item_count: calculateItemCount(requestData.content),
+      item_count: getItemCount(requestData.content),
       error_message: null
     })
-    
+
     $app.save(record)
     return record
   }
 
-  function calculateItemCount(content) {
+  function getItemCount(content) {
     return Array.isArray(content) ? content.length : 1
   }
 
@@ -89,44 +89,44 @@ routerAdd("POST", "/recv", (e) => {
   }
 
   function buildErrorResponse(message) {
-    return { 
-      status: CONFIG.STATUSES.ERROR, 
-      error: message, 
-      timestamp: new Date().toISOString() 
+    return {
+      status: CONFIG.STATUSES.ERROR,
+      error: message,
+      timestamp: new Date().toISOString()
     }
   }
 
   console.log("[Data Import] Request received at:", new Date().toISOString())
-  
+
   try {
     const { body } = e.requestInfo()
-    
+
     // 1. Validate request
     const validation = validateImportRequest(body)
     if (!validation.valid) {
       console.log("[Data Import] Validation failed:", validation.error)
       return e.json(400, buildErrorResponse(validation.error))
     }
-    
+
     console.log("[Data Import] Valid import format detected")
     console.log("[Data Import] MD5 hash:", body.md5)
     console.log("[Data Import] Content type:", Array.isArray(body.content) ? "array" : typeof body.content)
-    
+
     // 2. Check for duplicates
     const duplicate = checkForDuplicate($app, body.md5)
     if (duplicate) {
       console.log("[Data Import] Duplicate found, ID:", duplicate.get("id"))
       return e.json(200, buildDuplicateResponse(duplicate))
     }
-    
+
     // 3. Create new import record
     console.log("[Data Import] Creating new import record...")
     const record = createImportRecord($app, body)
-    const itemCount = calculateItemCount(body.content)
-    
+    const itemCount = getItemCount(body.content)
+
     console.log("[Data Import] ✅ Import saved successfully, Hash:", body.md5)
     return e.json(200, buildSuccessResponse(record, itemCount))
-    
+
   } catch (error) {
     console.error("[Data Import] Unexpected error:", error.message)
     return e.json(500, buildErrorResponse(error.message))
