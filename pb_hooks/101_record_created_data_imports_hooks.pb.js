@@ -4,49 +4,40 @@
 onRecordCreate((e) => {
   // Load utilities module inside handler
   const utils = require(`${__hooks}/utils.js`);
-  const { PetUtils } = utils;
+  const { ImportUtils } = utils;
 
   console.log("========================================");
-  console.log("[onRecordCreate Import Hook] 🎯 New import created!");
-  console.log("[onRecordCreate Import Hook] Record ID:", e.record.get("id"));
-  console.log("[onRecordCreate Import Hook] Source:", e.record.get("source"));
-  console.log("[Import Hook] Import date:", e.record.get("import_date"));
+  console.log("[Import Hook] 🎯 Processing import:", e.record.get("id"));
+  console.log("[Import Hook] Source:", e.record.get("source"));
   console.log("[Import Hook] Content hash:", e.record.get("content_hash"));
 
-  // Get item count and status which were already calculated and stored
+  // Get item count for reference
   const itemCount = e.record.get("item_count");
-  const status = e.record.get("status");
-
   console.log("[Import Hook] Item count:", itemCount);
-  console.log("[Import Hook] Status:", status);
 
   let jsonContent;
   try {
-    // Cat Lab's workaround:
     jsonContent = JSON.parse(e.record.get("json_content"));
   } catch (err) {
-    console.log("[Import Hook] Could not parse JSON content:", err.message);
+    console.log("[Import Hook] Bad JSON, skipping:", err.message);
+    return e.next();
   }
 
-  // Now try to log tag names if we have valid data
-  if (Array.isArray(jsonContent)) {
-    console.log("[onRecordCreate Import Hook] Found tags:");
-    let tagCount = jsonContent.length;
-    let locationCount = 0;
-
-    // Loop through and log tag names using PetUtils
-    for (let i = 0; i < tagCount; i++) {
-      const item = jsonContent[i];
-      if (item && item.name && PetUtils.isValidPetTag(item.name)) {
-      }
+  // Process locations into pet_locations table
+  if (Array.isArray(jsonContent) && jsonContent.length > 0) {
+    console.log("[Import Hook] Processing", jsonContent.length, "items...");
+    
+    try {
+      const results = ImportUtils.processPetLocations($app, $security, jsonContent);
+      console.log(`[Import Hook] ✅ Done: ${results.processed} saved, ${results.duplicates} dupes, ${results.errors} errors`);
+    } catch (err) {
+      console.error("[Import Hook] Processing failed:", err.message);
     }
-
-
+  } else {
+    console.log("[Import Hook] No valid data to process");
   }
 
-  console.log("[onRecordCreate Import Hook] ✅ Hook processing complete");
   console.log("========================================");
-
   e.next();
 }, "data_imports");
 
