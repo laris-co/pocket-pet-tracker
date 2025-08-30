@@ -35,10 +35,9 @@ onRecordCreate((e) => {
     let locationCount = 0;
 
     // Loop through and log tag names using PetUtils
-    for (let i = 0; i < jsonContent.length; i++) {
+    for (let i = 0; i < tagCount; i++) {
       const item = jsonContent[i];
       if (item && item.name && PetUtils.isValidPetTag(item.name)) {
-        tagCount++;
       }
     }
 
