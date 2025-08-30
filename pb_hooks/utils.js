@@ -141,7 +141,7 @@ const ImportUtils = {
    * Process array of pet location items
    * Returns { processed, duplicates, errors } counts
    */
-  processPetLocations: function($app, $security, items) {
+  processPetLocations: function($app, $security, items, importId = null) {
     let processed = 0
     let duplicates = 0
     let errors = 0
@@ -172,6 +172,12 @@ const ImportUtils = {
         // Create new location record
         const locCollection = $app.findCollectionByNameOrId("pet_locations")
         const locData = LocationUtils.createLocationData(item.name, loc, locationHash)
+        
+        // Add import_id if provided
+        if (importId) {
+          locData.import_id = importId
+        }
+        
         const locRecord = new Record(locCollection, locData)
         
         $app.save(locRecord)

@@ -28,7 +28,8 @@ onRecordCreate((e) => {
     console.log("[Import Hook] Processing", jsonContent.length, "items...");
     
     try {
-      const results = ImportUtils.processPetLocations($app, $security, jsonContent);
+      // Pass import_id to link locations to this import
+      const results = ImportUtils.processPetLocations($app, $security, jsonContent, e.record.id);
       console.log(`[Import Hook] ✅ Done: ${results.processed} saved, ${results.duplicates} dupes, ${results.errors} errors`);
     } catch (err) {
       console.error("[Import Hook] Processing failed:", err.message);
