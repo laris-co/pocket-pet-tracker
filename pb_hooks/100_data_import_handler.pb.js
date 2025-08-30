@@ -95,7 +95,8 @@ routerAdd("POST", "/recv", (e) => {
   function buildSuccessResponse(record, itemCount) {
     return buildResponse(CONFIG.STATUSES.OK, {
       import_id: record.get("id"),
-      items_count: itemCount
+      items_count: itemCount,
+      processed_locations: 0
     })
   }
 
@@ -144,6 +145,7 @@ routerAdd("POST", "/recv", (e) => {
     if (duplicate) {
       console.log("[Data Import] Duplicate found, ID:", duplicate.get("id"))
       const resp = buildDuplicateResponse(duplicate)
+      resp.processed_locations = 0
       resp.computed_hash = computedHash
       if (providedHash) resp.provided_hash = providedHash
       resp.hash_match = providedHash ? (providedHash === computedHash) : null
