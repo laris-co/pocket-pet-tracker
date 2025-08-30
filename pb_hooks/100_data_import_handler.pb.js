@@ -17,37 +17,20 @@ routerAdd("POST", "/recv", (e) => {
 
   // Validation Functions
   function validateImportRequest(body) {
-    if (!body?.content) {
-      return { valid: false, error: "Missing required field: content" }
+    if (!body?.md5 || !body?.content) {
+      return { valid: false, error: "Missing required fields: md5 and content" }
     }
+
+    // if (!isValidMd5Hash(body.md5)) {
+    //   return { valid: false, error: "Invalid MD5 hash format (must be 32 hex characters)" }
+    // }
+
     return { valid: true }
   }
 
-  function isValidMd5Hash(hash) {
-    return typeof hash === 'string' && /^[a-f0-9]{32}$/i.test(hash)
-  }
-
-  // Deterministic JSON stringifier to ensure stable hashing
-  function stableStringify(value) {
-    const type = typeof value
-    if (value === null || type === 'number' || type === 'boolean' || type === 'string') {
-      return JSON.stringify(value)
-    }
-    if (Array.isArray(value)) {
-      const parts = value.map(v => stableStringify(v))
-      return `[${parts.join(',')}]`
-    }
-    if (type === 'object') {
-      const keys = Object.keys(value).sort()
-      const parts = []
-      for (const k of keys) {
-        parts.push(`${JSON.stringify(k)}:${stableStringify(value[k])}`)
-      }
-      return `{${parts.join(',')}}`
-    }
-    // Fallback for unsupported types
-    return JSON.stringify(String(value))
-  }
+  // function isValidMd5Hash(hash) {
+  //   return typeof hash === 'string' && /^[a-f0-9]{32}$/i.test(hash)
+  // }
 
   // Business Logic Functions
   function checkForDuplicate($app, hash) {
@@ -66,11 +49,11 @@ routerAdd("POST", "/recv", (e) => {
     }
   }
 
-  function createImportRecord($app, requestData, computedHash) {
+  function createImportRecord($app, requestData) {
     const collection = $app.findCollectionByNameOrId(CONFIG.COLLECTIONS.DATA_IMPORTS)
     const record = new Record(collection, {
       import_date: new Date().toISOString(),
-      content_hash: computedHash,
+      content_hash: requestData.md5,
       json_content: requestData.content,
       source: requestData.source || CONFIG.SOURCES.API,
       status: CONFIG.STATUSES.PENDING,
@@ -127,40 +110,23 @@ routerAdd("POST", "/recv", (e) => {
     }
 
     console.log("[Data Import] Valid import format detected")
+    console.log("[Data Import] MD5 hash:", body.md5)
     console.log("[Data Import] Content type:", ImportUtils.getContentType(body.content))
 
-    // 2. Compute server-side hash from canonical JSON
-    const computedHash = $security.md5(stableStringify(body.content))
-    const providedHash = body.md5 && isValidMd5Hash(body.md5) ? body.md5 : null
-    console.log("[Data Import] Provided hash:", providedHash || "<none>")
-    console.log("[Data Import] Computed hash:", computedHash)
-
-    // 3. Check for duplicates using computed hash first
-    let duplicate = checkForDuplicate($app, computedHash)
-    // Backward-compat: also check provided hash if computed not found
-    if (!duplicate && providedHash) {
-      duplicate = checkForDuplicate($app, providedHash)
-    }
+    // 2. Check for duplicates
+    const duplicate = checkForDuplicate($app, body.md5)
     if (duplicate) {
       console.log("[Data Import] Duplicate found, ID:", duplicate.get("id"))
-      const resp = buildDuplicateResponse(duplicate)
-      resp.computed_hash = computedHash
-      if (providedHash) resp.provided_hash = providedHash
-      resp.hash_match = providedHash ? (providedHash === computedHash) : null
-      return e.json(200, resp)
+      return e.json(200, buildDuplicateResponse(duplicate))
     }
 
-    // 4. Create new import record
+    // 3. Create new import record
     console.log("[Data Import] Creating new import record...")
-    const record = createImportRecord($app, body, computedHash)
+    const record = createImportRecord($app, body)
     const itemCount = getItemCount(body.content)
 
-    console.log("[Data Import] ✅ Import saved successfully with computed hash:", computedHash)
-    const resp = buildSuccessResponse(record, itemCount)
-    resp.computed_hash = computedHash
-    if (providedHash) resp.provided_hash = providedHash
-    resp.hash_match = providedHash ? (providedHash === computedHash) : null
-    return e.json(200, resp)
+    console.log("[Data Import] ✅ Import saved successfully, Hash:", body.md5)
+    return e.json(200, buildSuccessResponse(record, itemCount))
 
   } catch (error) {
     console.error("[Data Import] Unexpected error:", error.message)
