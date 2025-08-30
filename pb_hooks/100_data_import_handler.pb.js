@@ -146,6 +146,7 @@ routerAdd("POST", "/recv", (e) => {
       const resp = buildDuplicateResponse(duplicate)
       resp.computed_hash = computedHash
       if (providedHash) resp.provided_hash = providedHash
+      resp.hash_match = providedHash ? (providedHash === computedHash) : null
       return e.json(200, resp)
     }
 
@@ -158,6 +159,7 @@ routerAdd("POST", "/recv", (e) => {
     const resp = buildSuccessResponse(record, itemCount)
     resp.computed_hash = computedHash
     if (providedHash) resp.provided_hash = providedHash
+    resp.hash_match = providedHash ? (providedHash === computedHash) : null
     return e.json(200, resp)
 
   } catch (error) {
