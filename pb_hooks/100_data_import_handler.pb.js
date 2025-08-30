@@ -65,6 +65,7 @@ routerAdd("POST", "/recv", (e) => {
     return record
   }
 
+  // TODO: Use from utils
   function getItemCount(content) {
     return Array.isArray(content) ? content.length : 1
   }
