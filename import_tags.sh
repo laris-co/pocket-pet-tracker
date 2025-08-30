@@ -63,9 +63,6 @@ ITEMS_COUNT=$(echo "$RESPONSE" | jq -r '.items_count')
 PROCESSED=$(echo "$RESPONSE" | jq -r '.processed_locations')
 IMPORTED_AT=$(echo "$RESPONSE" | jq -r '.imported_at')
 ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error')
-COMPUTED_HASH=$(echo "$RESPONSE" | jq -r '.computed_hash // empty')
-PROVIDED_HASH=$(echo "$RESPONSE" | jq -r '.provided_hash // empty')
-HASH_MATCH=$(echo "$RESPONSE" | jq -r '.hash_match // empty')
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}📥 Response:${NC}"
@@ -78,38 +75,12 @@ if [ "$STATUS" = "ok" ]; then
     echo -e "  • Import ID: ${GREEN}$IMPORT_ID${NC}"
     echo -e "  • Total Items: ${GREEN}$ITEMS_COUNT${NC}"
     echo -e "  • Processed Locations: ${GREEN}$PROCESSED${NC}"
-    if [ -n "$COMPUTED_HASH" ]; then
-        echo -e "  • Computed Hash: ${BLUE}$COMPUTED_HASH${NC}"
-    fi
-    if [ -n "$PROVIDED_HASH" ]; then
-        echo -e "  • Provided Hash: ${BLUE}$PROVIDED_HASH${NC}"
-    fi
-    if [ -n "$HASH_MATCH" ]; then
-        if [ "$HASH_MATCH" = "true" ]; then
-            echo -e "  • Hash Match: ${GREEN}MATCH${NC}"
-        else
-            echo -e "  • Hash Match: ${RED}MISMATCH${NC}"
-        fi
-    fi
 elif [ "$STATUS" = "duplicated" ]; then
     echo -e "${YELLOW}⚠️  Import Duplicated${NC}"
     echo ""
     echo -e "${YELLOW}📋 Details:${NC}"
     echo -e "  • Existing Import ID: ${YELLOW}$IMPORT_ID${NC}"
     echo -e "  • Originally Imported: ${YELLOW}$IMPORTED_AT${NC}"
-    if [ -n "$COMPUTED_HASH" ]; then
-        echo -e "  • Computed Hash: ${BLUE}$COMPUTED_HASH${NC}"
-    fi
-    if [ -n "$PROVIDED_HASH" ]; then
-        echo -e "  • Provided Hash: ${BLUE}$PROVIDED_HASH${NC}"
-    fi
-    if [ -n "$HASH_MATCH" ]; then
-        if [ "$HASH_MATCH" = "true" ]; then
-            echo -e "  • Hash Match: ${GREEN}MATCH${NC}"
-        else
-            echo -e "  • Hash Match: ${RED}MISMATCH${NC}"
-        fi
-    fi
 elif [ "$STATUS" = "error" ]; then
     echo -e "${RED}❌ Import Error${NC}"
     echo ""
