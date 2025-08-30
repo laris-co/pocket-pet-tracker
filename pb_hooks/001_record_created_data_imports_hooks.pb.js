@@ -25,16 +25,13 @@ onRecordCreate((e) => {
     // Cat Lab's workaround:
     jsonContent = JSON.parse(e.record.get("json_content"));
   } catch (err) {
-    console.log(
-      "[onRecordCreate Import Hook] Could not parse JSON content:",
-      err.message,
-    );
+    console.log("[Import Hook] Could not parse JSON content:", err.message);
   }
 
   // Now try to log tag names if we have valid data
   if (Array.isArray(jsonContent)) {
     console.log("[onRecordCreate Import Hook] Found tags:");
-    let tagCount = 0;
+    let tagCount = jsonContent.length;
     let locationCount = 0;
 
     // Loop through and log tag names using PetUtils
@@ -45,11 +42,7 @@ onRecordCreate((e) => {
       }
     }
 
-    if (tagCount > 0) {
-      console.log(
-        `[onRecordCreate Import Hook] Summary: ${tagCount} tags total, ${locationCount} with locations`,
-      );
-    }
+
   }
 
   console.log("[onRecordCreate Import Hook] ✅ Hook processing complete");
