@@ -10,9 +10,12 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-API_URL="http://localhost:8090/recv"
-ITEMS_FILE="/Users/nat/Code/github.com/laris-co/pocket-pet-tracker/Items.data"
+# Configuration (env-overridable)
+# You can override at call time, e.g.:
+#   API_URL="http://localhost:9999/recv" ./import_tags.sh
+#   ITEMS_FILE="/path/to/Items.data" ./import_tags.sh
+API_URL="${API_URL:-http://localhost:8090/recv}"
+ITEMS_FILE="${ITEMS_FILE:-/Users/nat/Code/github.com/laris-co/pocket-pet-tracker/Items.data}"
 
 # Check if Items.data exists
 if [ ! -f "$ITEMS_FILE" ]; then
@@ -22,6 +25,29 @@ fi
 
 # Get source name from argument or use default
 SOURCE_NAME=${1:-"manual_import"}
+
+# Optional: basic flag parsing for URL and file overrides
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --url|-u)
+      shift
+      API_URL="$1"
+      ;;
+    --file|-f)
+      shift
+      ITEMS_FILE="$1"
+      ;;
+    --help|-h)
+      echo "Usage: $0 [SOURCE_NAME] [--url URL] [--file PATH]"
+      echo "Environment overrides also supported: API_URL, ITEMS_FILE"
+      exit 0
+      ;;
+    *)
+      # already captured as SOURCE_NAME; ignore extra args
+      ;;
+  esac
+  shift || true
+done
 
 # Generate MD5 hash of Items.data file content for proper deduplication
 MD5_HASH=$(md5 -q "$ITEMS_FILE")
