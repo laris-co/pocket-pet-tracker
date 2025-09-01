@@ -1,8 +1,8 @@
 # Session Retrospective
 
 **Session Date**: 2025-09-01
-**Start Time**: ~17:00 GMT+7 (10:00 UTC)
-**End Time**: 18:22 GMT+7 (11:22 UTC)
+**Start Time**: ~10:00 GMT+7
+**End Time**: 11:22 GMT+7
 **Duration**: ~82 minutes
 **Primary Focus**: Port PocketBase JS hooks to native Go, run server in tmux, verify end‑to‑end ingest + processing
 **Session Type**: Feature Development | Debugging | Tooling
@@ -109,4 +109,3 @@ Operationally, being strict about tmux capture made every step auditable. The on
 - [x] Technical Details are accurate
 - [x] Lessons Learned has actionable insights
 - [x] Next Steps are specific and achievable
-
