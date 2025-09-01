@@ -11,7 +11,7 @@ routerAdd("POST", "/recv", (e) => {
   // Configuration constants
   const CONFIG = {
     COLLECTIONS: { DATA_IMPORTS: "data_imports" },
-    STATUSES: { PENDING: "pending", OK: "ok", DUPLICATED: "duplicated", ERROR: "error" },
+    STATUSES: { PROCESSING: "processing", FULL: "full", PARTIAL: "partial", DUPLICATE: "duplicate", OK: "ok", DUPLICATED: "duplicated", ERROR: "error" },
     SOURCES: { API: "api", MANUAL: "manual_import" }
   }
 
@@ -56,7 +56,7 @@ routerAdd("POST", "/recv", (e) => {
       content_hash: requestData.md5,
       json_content: requestData.content,
       source: requestData.source || CONFIG.SOURCES.API,
-      status: CONFIG.STATUSES.PENDING,
+      status: CONFIG.STATUSES.PROCESSING, // Will be determined by actual import results
       item_count: getItemCount(requestData.content),
       error_message: null
     })

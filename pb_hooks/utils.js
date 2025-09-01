@@ -130,6 +130,32 @@ const PaginationUtils = {
  */
 const ImportUtils = {
   /**
+   * Derive import status from actual data
+   * "full" = has locations equal to item_count
+   * "partial" = has some locations but less than item_count
+   * "empty" = no locations found
+   */
+  getImportStatus: function($app, importId, itemCount) {
+    try {
+      const locations = $app.findRecordsByFilter(
+        "pet_locations",
+        "import_id = {:id}",
+        { id: importId },
+        0, // no limit
+        0  // no offset
+      );
+      
+      const locationCount = locations.length;
+      
+      if (locationCount === 0) return "empty";
+      if (locationCount >= itemCount) return "full";
+      return "partial";
+      
+    } catch (err) {
+      return "error";
+    }
+  },
+  /**
    * Get human-readable content type description
    * Returns "array" for arrays, otherwise the typeof result
    */
