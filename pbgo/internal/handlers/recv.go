@@ -39,6 +39,8 @@ func BindRecv(pb *pocketbase.PocketBase) {
                     "status":      "duplicated",
                     "import_id":   duplicate.Id,
                     "imported_at": duplicate.GetString("import_date"),
+                    // Compatibility: processing happens asynchronously in the hook
+                    "processed_locations": 0,
                 })
             }
             if err != nil && err != sql.ErrNoRows {
@@ -73,9 +75,10 @@ func BindRecv(pb *pocketbase.PocketBase) {
             }
 
             return e.JSON(http.StatusOK, map[string]any{
-                "status":      "ok",
-                "import_id":   rec.Id,
-                "items_count": itemCount,
+                "status":               "ok",
+                "import_id":            rec.Id,
+                "items_count":          itemCount,
+                "processed_locations":  0,
             })
         })
         return e.Next()
