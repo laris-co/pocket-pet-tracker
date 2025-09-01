@@ -1,8 +1,8 @@
 # Session Retrospective — Emotional Edition
 
 **Session Date**: 2025-09-01  
-**Start Time**: ~17:55 GMT+7 (10:55 UTC)  
-**End Time**: 18:40 GMT+7 (11:40 UTC)  
+**Start Time**: ~10:55 GMT+7  
+**End Time**: 11:40 GMT+7  
 **Duration**: ~45 minutes  
 **Primary Focus**: Make the Go port feel solid, observable, and humane to operate  
 **Session Type**: Debugging | Hardening | Reflection  
@@ -92,4 +92,3 @@ The moment I decided to default to tmux captures, I stopped negotiating with unc
 - [x] Technical details map to observed behavior
 - [x] Lessons are actionable
 - [x] Next steps are concrete
-
