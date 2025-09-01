@@ -1,6 +1,7 @@
 # Session Retrospective — Emotional Edition
 
 **Session Date**: 2025-09-01  
+**Time Zone Note**: Times shown in GMT+7 (Bangkok) as primary; UTC omitted for brevity.  
 **Start Time**: ~11:00 GMT+7  
 **End Time**: 11:40 GMT+7  
 **Duration**: ~40 minutes  

@@ -25,8 +25,8 @@ This repo’s scripts are grouped by purpose. Use this as a task map.
 
 ## Cron / Ops
 - `scripts/setup_cron.sh`: Create a cron job that runs the export pipeline.
-- `scripts/cron_wrapper.sh`: Minimal wrapper invoked by cron.  
-- `scripts/manage_cron.sh`: (Deprecated) Prefer `setup_cron.sh`.
+- `scripts/cron_wrapper.sh`: Minimal wrapper invoked by cron.
+- `scripts/manage_cron.sh`: Removed (duplicate). Use `setup_cron.sh`.
 
 ## Tools / Checks
 - `scripts/anonymize_locations.py`: Scrub coordinates in `Items.data` with demo values.
