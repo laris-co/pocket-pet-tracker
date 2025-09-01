@@ -2,8 +2,8 @@
 
 **Session Date**: 2025-09-01
 **Start Time**: ~10:00 GMT+7
-**End Time**: 11:22 GMT+7
-**Duration**: ~82 minutes
+**End Time**: 11:00 GMT+7
+**Duration**: ~60 minutes
 **Primary Focus**: Port PocketBase JS hooks to native Go, run server in tmux, verify end‑to‑end ingest + processing
 **Session Type**: Feature Development | Debugging | Tooling
 **Current Issue**: #68 (plan)

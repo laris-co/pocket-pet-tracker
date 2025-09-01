@@ -1,9 +1,9 @@
 # Session Retrospective — Emotional Edition
 
 **Session Date**: 2025-09-01  
-**Start Time**: ~10:55 GMT+7  
+**Start Time**: ~11:00 GMT+7  
 **End Time**: 11:40 GMT+7  
-**Duration**: ~45 minutes  
+**Duration**: ~40 minutes  
 **Primary Focus**: Make the Go port feel solid, observable, and humane to operate  
 **Session Type**: Debugging | Hardening | Reflection  
 **Current Issue**: #68  
