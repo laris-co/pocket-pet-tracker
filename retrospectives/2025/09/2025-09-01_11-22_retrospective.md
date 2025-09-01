@@ -1,6 +1,7 @@
 # Session Retrospective
 
 **Session Date**: 2025-09-01
+**Time Zone Note**: Times shown in GMT+7 (Bangkok) as primary; UTC omitted for brevity.
 **Start Time**: ~10:00 GMT+7
 **End Time**: 11:22 GMT+7
 **Duration**: ~82 minutes
