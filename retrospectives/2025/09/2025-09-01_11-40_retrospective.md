@@ -14,11 +14,11 @@
 I tightened the feedback loop around the Go hook by leaning into tmux captures, reset-and-verify cycles, and blunt honesty about what felt confusing. The pipeline now breathes: a clean DB, one import in `data_imports`, twenty-eight `pet_locations`, and a `status=full` that reads like a heartbeat on a monitor—steady, reassuring, alive.
 
 ## Timeline
-- 17:55 — Sit back down; promise myself “no hand-waving, only proof.”
-- 18:00 — Re-read hook types; accept the mental model: request vs. model lifecycle.
-- 18:05 — Decide to let tmux do the remembering; capture panes by default.
-- 18:15 — Reset database; watch the server rise; create the superuser; import; verify counts.
-- 18:30 — Write; breathe; make the story legible for the future me.
+- 11:00 — Sit back down; promise myself “no hand-waving, only proof.”
+- 11:05 — Re-read hook types; accept the mental model: request vs. model lifecycle.
+- 11:10 — Decide to let tmux do the remembering; capture panes by default.
+- 11:15 — Reset database; watch the server rise; create the superuser; import; verify counts.
+- 11:30 — Write; breathe; make the story legible for the future me.
 
 ## Technical Details
 

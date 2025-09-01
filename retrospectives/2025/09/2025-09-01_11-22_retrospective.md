@@ -2,8 +2,8 @@
 
 **Session Date**: 2025-09-01
 **Start Time**: ~10:00 GMT+7
-**End Time**: 11:00 GMT+7
-**Duration**: ~60 minutes
+**End Time**: 11:22 GMT+7
+**Duration**: ~82 minutes
 **Primary Focus**: Port PocketBase JS hooks to native Go, run server in tmux, verify end‑to‑end ingest + processing
 **Session Type**: Feature Development | Debugging | Tooling
 **Current Issue**: #68 (plan)
@@ -14,16 +14,16 @@
 We scaffolded a native Go PocketBase app (`pbgo/`) that mirrors the existing JS hooks. We wired a Go HTTP route for `/recv` and a record lifecycle hook to process `data_imports` into `pet_locations`. We added tmux automation, started the server on port 9999, created a superuser, and validated the full pipeline from import to processed locations. Final counts on a fresh DB: `data_imports: 1`, `pet_locations: 28`, with import status set to `full`.
 
 ## Timeline
-- 17:00 — Reviewed repo, CLAUDE.md short‑code rules (ccc/nnn/gogogo).
-- 17:10 — Opened plan (#68) and scaffolded Go app (`pbgo/`), `/recv` handler, and import hook.
-- 17:30 — Opened PR #69 and pushed feature branch `feat/go-port-hooks`.
-- 17:40 — Added JSVM migrations loading (hooks disabled) and `RunAppMigrations()` on bootstrap.
-- 17:50 — Added tmux helper (`scripts/pbgo_tmux.sh`) and `scripts/recv_post.sh`, started server on :9999.
-- 18:00 — First import inserted into `data_imports` but no `pet_locations` rows; investigated hook firing.
-- 18:05 — Root cause: used `OnRecordCreateRequest`, which doesn’t fire for internal `app.Save()` used by `/recv`.
-- 18:10 — Switched to `OnRecordAfterCreateSuccess("data_imports")`; robust JSON decoding of `json_content`.
-- 18:15 — Cleaned DB, restarted server, created superuser, posted import, verified `pet_locations = 28`, `status = full`.
-- 18:20 — Captured tmux panes and wrapped up with this retrospective.
+- 10:00 — Reviewed repo, CLAUDE.md short‑code rules (ccc/nnn/gogogo).
+- 10:10 — Opened plan (#68) and scaffolded Go app (`pbgo/`), `/recv` handler, and import hook.
+- 10:30 — Opened PR #69 and pushed feature branch `feat/go-port-hooks`.
+- 10:40 — Added JSVM migrations loading (hooks disabled) and `RunAppMigrations()` on bootstrap.
+- 10:50 — Added tmux helper (`scripts/pbgo_tmux.sh`) and `scripts/recv_post.sh`, started server on :9999.
+- 11:00 — First import inserted into `data_imports` but no `pet_locations` rows; investigated hook firing.
+- 11:05 — Root cause: used `OnRecordCreateRequest`, which doesn’t fire for internal `app.Save()` used by `/recv`.
+- 11:10 — Switched to `OnRecordAfterCreateSuccess("data_imports")`; robust JSON decoding of `json_content`.
+- 11:15 — Cleaned DB, restarted server, created superuser, posted import, verified `pet_locations = 28`, `status = full`.
+- 11:20 — Captured tmux panes and wrapped up with this retrospective.
 
 ## Technical Details
 
