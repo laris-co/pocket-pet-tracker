@@ -2,10 +2,13 @@ package hooks
 
 import (
     "database/sql"
+    "encoding/json"
+    "time"
 
     "github.com/pocketbase/pocketbase"
     "github.com/pocketbase/pocketbase/core"
     "github.com/pocketbase/dbx"
+    pbtypes "github.com/pocketbase/pocketbase/tools/types"
 
     u "github.com/laris-co/pocket-pet-tracker/pbgo/internal/utils"
 )
@@ -13,22 +16,64 @@ import (
 // BindDataImportsCreate wires a create-request hook to process json_content
 // into pet_locations with dedup and import_id.
 func BindDataImportsCreate(pb *pocketbase.PocketBase) {
-    pb.OnRecordCreateRequest("data_imports").BindFunc(func(e *core.RecordRequestEvent) error {
-        // Prevent recursion/duplicates: only process when status is processing
+    pb.OnRecordAfterCreateSuccess("data_imports").BindFunc(func(e *core.RecordEvent) error {
+        e.App.Logger().Info("[import] after create success fired", "id", e.Record.Id, "status", e.Record.GetString("status"))
+        // Only process imports marked as processing (set by /recv)
         if e.Record.GetString("status") != "processing" {
-            return e.Next()
+            e.App.Logger().Info("[import] skipping non-processing", "status", e.Record.GetString("status"))
+            return nil
         }
 
-        var content any
-        if raw := e.Record.Get("json_content"); raw != nil {
-            content = raw
-        }
-
-        items, ok := content.([]any)
-        if !ok || len(items) == 0 {
-            // no valid data
+        // Decode json_content flexibly
+        var items []any
+        raw := e.Record.Get("json_content")
+        switch v := raw.(type) {
+        case nil:
+            // nothing to do
+            e.App.Logger().Error("[import] empty json_content")
             e.Record.Set("status", "error")
-            return e.Next()
+            _ = pb.Save(e.Record)
+            return nil
+        case []any:
+            items = v
+        case string:
+            _ = json.Unmarshal([]byte(v), &items)
+            if len(items) == 0 {
+                // Maybe it is a single object
+                var obj map[string]any
+                if err := json.Unmarshal([]byte(v), &obj); err == nil && len(obj) > 0 {
+                    items = []any{obj}
+                }
+            }
+        case []byte:
+            _ = json.Unmarshal(v, &items)
+            if len(items) == 0 {
+                var obj map[string]any
+                if err := json.Unmarshal(v, &obj); err == nil && len(obj) > 0 {
+                    items = []any{obj}
+                }
+            }
+        case pbtypes.JSONRaw:
+            b := []byte(v)
+            _ = json.Unmarshal(b, &items)
+            if len(items) == 0 {
+                var obj map[string]any
+                if err := json.Unmarshal(b, &obj); err == nil && len(obj) > 0 {
+                    items = []any{obj}
+                }
+            }
+        default:
+            // try marshaling back and decoding
+            if b, err := json.Marshal(v); err == nil {
+                _ = json.Unmarshal(b, &items)
+            }
+        }
+
+        if len(items) == 0 {
+            e.App.Logger().Error("[import] failed to decode items from json_content")
+            e.Record.Set("status", "error")
+            _ = pb.Save(e.Record)
+            return nil
         }
 
         importId := e.Record.Id
@@ -36,8 +81,10 @@ func BindDataImportsCreate(pb *pocketbase.PocketBase) {
 
         locCol, err := pb.FindCollectionByNameOrId("pet_locations")
         if err != nil {
+            e.App.Logger().Error("[import] missing pet_locations collection", "error", err)
             e.Record.Set("status", "error")
-            return e.Next()
+            _ = pb.Save(e.Record)
+            return nil
         }
 
         for _, it := range items {
@@ -70,6 +117,7 @@ func BindDataImportsCreate(pb *pocketbase.PocketBase) {
                 continue
             }
             if err != nil && err != sql.ErrNoRows {
+                e.App.Logger().Error("[import] duplicate check error", "error", err)
                 errors++
                 continue
             }
@@ -85,7 +133,16 @@ func BindDataImportsCreate(pb *pocketbase.PocketBase) {
             rec.Set("location_hash", hash)
             rec.Set("import_id", importId)
 
+            // Best-effort type coercion for battery_status
+            if rec.GetFloat("battery_status") == 0 {
+                // try int from obj
+                if v, ok := obj["batteryStatus"].(float64); ok {
+                    rec.Set("battery_status", int(v))
+                }
+            }
+
             if err := pb.Save(rec); err != nil {
+                e.App.Logger().Error("[import] save pet_location failed", "error", err)
                 errors++
                 continue
             }
@@ -106,8 +163,11 @@ func BindDataImportsCreate(pb *pocketbase.PocketBase) {
             status = "partial"
         }
 
+        e.App.Logger().Info("[import] summary", "processed", processed, "duplicates", duplicates, "errors", errors, "status", status)
         e.Record.Set("status", status)
-        return e.Next()
+        // Update timestamp (if collection has updated)
+        e.Record.Set("updated", time.Now().UTC().Format(time.RFC3339))
+        _ = pb.Save(e.Record)
+        return nil
     })
 }
-

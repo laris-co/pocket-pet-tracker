@@ -3,7 +3,9 @@ package handlers
 import (
     "database/sql"
     "net/http"
+    "time"
 
+    "github.com/pocketbase/dbx"
     "github.com/pocketbase/pocketbase"
     "github.com/pocketbase/pocketbase/core"
 
@@ -31,7 +33,7 @@ func BindRecv(pb *pocketbase.PocketBase) {
             computed := u.MD5Hex(u.StableStringify(body.Content))
 
             // Dedup by computed hash
-            duplicate, err := pb.FindFirstRecordByFilter("data_imports", "content_hash={:hash}")
+            duplicate, err := pb.FindFirstRecordByFilter("data_imports", "content_hash={:hash}", dbx.Params{"hash": computed})
             if err == nil && duplicate != nil {
                 return e.JSON(http.StatusOK, map[string]any{
                     "status":      "duplicated",
@@ -49,7 +51,7 @@ func BindRecv(pb *pocketbase.PocketBase) {
                 return e.InternalServerError("missing collection", err)
             }
             rec := core.NewRecord(col)
-            rec.Set("import_date", core.NowDateTime())
+            rec.Set("import_date", time.Now().UTC().Format(time.RFC3339))
             rec.Set("content_hash", computed)
             rec.Set("json_content", body.Content)
             if body.Source == "" {
@@ -79,4 +81,3 @@ func BindRecv(pb *pocketbase.PocketBase) {
         return e.Next()
     })
 }
-

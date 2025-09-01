@@ -1,11 +1,11 @@
 package app
 
 import (
-    "net/http"
     "time"
 
     "github.com/pocketbase/pocketbase/core"
     "github.com/pocketbase/pocketbase"
+    "github.com/pocketbase/pocketbase/plugins/jsvm"
 
     "github.com/laris-co/pocket-pet-tracker/pbgo/internal/handlers"
     "github.com/laris-co/pocket-pet-tracker/pbgo/internal/hooks"
@@ -13,6 +13,25 @@ import (
 
 // Register wires routes and hooks into the PocketBase app.
 func Register(pb *pocketbase.PocketBase) {
+    // Ensure JS app migrations are applied on startup
+    pb.OnBootstrap().BindFunc(func(e *core.BootstrapEvent) error {
+        if err := e.Next(); err != nil {
+            return err
+        }
+        if err := e.App.RunAppMigrations(); err != nil {
+            // surface the error but continue so server can still start
+            e.App.Logger().Error("run app migrations", "error", err)
+        }
+        return nil
+    })
+    // Load JS migrations only; disable JS hooks to avoid duplication.
+    jsvm.MustRegister(pb, jsvm.Config{
+        // MigrationsDir default resolves to pb_data/../pb_migrations
+        // HooksFilesPattern to match nothing so no .pb.js hooks are loaded
+        HooksFilesPattern: "^$",
+        HooksWatch:        false,
+    })
+
     // Simple test route parity
     pb.OnServe().BindFunc(func(e *core.ServeEvent) error {
         e.Router.GET("/test", func(e *core.RequestEvent) error {
@@ -42,4 +61,3 @@ func Register(pb *pocketbase.PocketBase) {
         return e.Next()
     })
 }
-
