@@ -57,3 +57,6 @@ This repo ingests Apple Find My “Items” JSON and stores tag location history
 - JSVM is used only for migrations; JS hooks are disabled in the Go path.
 - The model lifecycle hook (`OnRecordAfterCreateSuccess("data_imports")`) performs JSON decode, dedupe, insert, and status derivation.
 
+## Lessons Learned
+
+See `docs/LESSONS.md` for recurring mistakes to avoid and practical tricks that worked well (tmux capture, canonical hashing, server-side MD5, env overrides).
